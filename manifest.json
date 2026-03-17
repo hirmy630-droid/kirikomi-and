@@ -1,7 +1,6 @@
 {
-  "name": "切込寸法",
-  "short_name": "切込寸法",
-  "description": "切込寸法の現場用アプリ",
+  "name": "切込寸法計算",
+  "short_name": "切込",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
