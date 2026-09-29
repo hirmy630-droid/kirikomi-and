@@ -1,7 +1,8 @@
 {
+  "id": "kirikomi-pwa-v20260929184638",
   "name": "切込寸法計算",
   "short_name": "切込",
-  "start_url": "./index.html",
+  "start_url": "./index.html?v=20260929184638",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
