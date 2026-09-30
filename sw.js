@@ -1,12 +1,12 @@
-const CACHE_NAME = 'kirikomi-pwa-v20260930111603';
+const CACHE_NAME = 'kirikomi-pwa-v20260930112248';
 const CORE_ASSETS = [
   './',
   './index.html',
-  './index.html?v=20260930111603',
+  './index.html?v=20260930112248',
   './manifest.json',
-  './manifest.json?v=20260930111603',
+  './manifest.json?v=20260930112248',
   './sw.js',
-  './sw.js?v=20260930111603'
+  './sw.js?v=20260930112248'
 ];
 
 self.addEventListener('install', (event) => {
@@ -51,7 +51,7 @@ async function networkFirst(request) {
   } catch (error) {
     const cached = await cache.match(request);
     if (cached) return cached;
-    return cache.match('./index.html?v=20260930111603');
+    return cache.match('./index.html?v=20260930112248');
   }
 }
 

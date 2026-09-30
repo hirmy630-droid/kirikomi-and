@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
     <title>切込寸法計算</title>
+    
+    <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json?v=20260930112248">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -120,7 +125,7 @@
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
         }
 
-        /* 1行目グレーキー (AC, C, ⏎) */
+        /* 制御系グレーキー (AC, C) */
         .key-btn.gray-control {
             background: #353538;
             color: #e5e5ea;
@@ -174,35 +179,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="切込">
-    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-    <link rel="manifest" href="./manifest.json?v=20260930111603">
-    <script>
-    if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.protocol === 'http:')) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20260930111603').then(reg => {
-          reg.onupdatefound = () => {
-            const installingWorker = reg.installing;
-            if (!installingWorker) return;
-            installingWorker.onstatechange = () => {
-              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                installingWorker.postMessage({ type: 'SKIP_WAITING' });
-              }
-            };
-          };
-        }).catch(() => {});
-
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            window.location.reload();
-            refreshing = true;
-          }
-        });
-      });
-    }
-    </script>
 </head>
 <body id="mainBody">
 
@@ -268,9 +244,9 @@
                 </div>
             </div>
 
-            <!-- 2行構成の立体テンキー -->
+            <!-- 2行構成の立体テンキー: AC / 00 / 0 / ⏎ / C -->
             <div id="keypadArea" class="keypad-container">
-                <!-- 1行目: AC / 00 / 0 / ⏎ / C -->
+                <!-- 1行目: AC / 00 / 0 / ⏎ / C (⏎は0と同じ背景色、マークはオレンジ) -->
                 <div class="keypad-row-1">
                     <button type="button" class="key-btn gray-control text-[1.1rem]" onclick="pressKey('allClear')">AC</button>
                     <button type="button" class="key-btn text-[1.15rem]" onclick="pressKey('00')">00</button>
@@ -393,11 +369,6 @@
         let currentResult = null;
         let activePreviewId = null;
 
-        const inputs = {
-            side_a: '', side_l2: '', side_l1: '', side_no: '1',
-            h_total: '', h_l2: '', h_l1: '', h_no: '1'
-        };
-
         function persist() {
             try {
                 localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify({ inputs, currentMode, calcDirection }));
@@ -406,6 +377,11 @@
                 console.warn('Storage save skipped:', e);
             }
         }
+
+        const inputs = {
+            side_a: '', side_l2: '', side_l1: '', side_no: '1',
+            h_total: '', h_l2: '', h_l1: '', h_no: '1'
+        };
 
         function hydrate() {
             try {
@@ -630,10 +606,8 @@
             const modal = document.getElementById('customConfirmModal');
             window.pendingAction = { action, mode };
             document.getElementById('confirmMessage').innerText = action === 'all' 
-                ? "全ての履歴を一括削除しますか？
-（鍵マークの項目は削除されません）" 
-                : `${mode}切込の履歴を削除しますか？
-（鍵マークの項目は削除されません）`;
+                ? "全ての履歴を一括削除しますか？\n（鍵マークの項目は削除されません）" 
+                : `${mode}切込の履歴を削除しますか？\n（鍵マークの項目は削除されません）`;
             modal.classList.remove('hidden');
         }
 
@@ -818,7 +792,44 @@
             }
         }, { passive: true });
 
-        window.onload = hydrate;
+        /* ダウンロード時にも確実に起動する初期化フック */
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', hydrate);
+        } else {
+            hydrate();
+        }
+
+        // ▼ここから追加：Service Workerの登録と更新検知▼
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js?v=20260930112248')
+                    .then(registration => {
+                        console.log('SW registered:', registration);
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // 更新がある場合は新ワーカーにスキップ指示を出す
+                                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                }
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.log('SW registration failed:', error);
+                    });
+            });
+
+            // 新しいSWがアクティブになったらリロードして画面を更新
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    refreshing = true;
+                    window.location.reload();
+                }
+            });
+        }
+        // ▲ここまで▲
     </script>
 </body>
 </html>
