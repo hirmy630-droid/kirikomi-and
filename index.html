@@ -167,24 +167,6 @@
         #toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(59, 130, 246, 0.95); color: white; padding: 16px 32px; border-radius: 12px; font-weight: 600; opacity: 0; z-index: 1000; transition: 0.3s; pointer-events: none; }
         #toast.show { opacity: 1; }
         .hidden { display: none !important; }
-
-        /* PWA Install UI */
-        #installBtn {
-            position: fixed;
-            right: 16px;
-            bottom: calc(16px + env(safe-area-inset-bottom));
-            z-index: 9999;
-            background: #2563eb;
-            color: #fff;
-            border: none;
-            border-radius: 14px;
-            padding: 12px 16px;
-            font-size: 14px;
-            font-weight: 700;
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
-            display: none;
-        }
-        #installBtn:active { transform: scale(0.98); }
     </style>
 
     <meta name="theme-color" content="#000000">
@@ -195,11 +177,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-<link rel="manifest" href="./manifest.json?v=20260929184638">
+    <link rel="manifest" href="./manifest.json?v=20260930111603">
     <script>
     if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.protocol === 'http:')) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20260929184638').then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20260930111603').then(reg => {
           reg.onupdatefound = () => {
             const installingWorker = reg.installing;
             if (!installingWorker) return;
@@ -288,13 +270,13 @@
 
             <!-- 2行構成の立体テンキー -->
             <div id="keypadArea" class="keypad-container">
-                <!-- 1行目: AC / C / 0 / 00 / ⏎ -->
+                <!-- 1行目: AC / 00 / 0 / ⏎ / C -->
                 <div class="keypad-row-1">
                     <button type="button" class="key-btn gray-control text-[1.1rem]" onclick="pressKey('allClear')">AC</button>
-                    <button type="button" class="key-btn gray-control text-[1.15rem]" onclick="pressKey('clear')">C</button>
-                    <button type="button" class="key-btn text-[1.25rem]" onclick="pressKey('0')">0</button>
                     <button type="button" class="key-btn text-[1.15rem]" onclick="pressKey('00')">00</button>
-                    <button type="button" class="key-btn gray-control enter-key text-[1.4rem] font-bold" onclick="pressKey('enter')">⏎</button>
+                    <button type="button" class="key-btn text-[1.25rem]" onclick="pressKey('0')">0</button>
+                    <button type="button" class="key-btn enter-key text-[1.4rem] font-bold" onclick="pressKey('enter')">⏎</button>
+                    <button type="button" class="key-btn gray-control text-[1.15rem]" onclick="pressKey('clear')">C</button>
                 </div>
 
                 <!-- 2行目: 1 〜 9 -->
@@ -647,8 +629,10 @@
         function openConfirm(action, mode = '') {
             const modal = document.getElementById('customConfirmModal');
             window.pendingAction = { action, mode };
-            document.getElementById('confirmMessage').innerText = action === 'all' ? "全ての履歴を一括削除しますか？
-（鍵マークの項目は削除されません）" : `${mode}切込の履歴を削除しますか？
+            document.getElementById('confirmMessage').innerText = action === 'all' 
+                ? "全ての履歴を一括削除しますか？
+（鍵マークの項目は削除されません）" 
+                : `${mode}切込の履歴を削除しますか？
 （鍵マークの項目は削除されません）`;
             modal.classList.remove('hidden');
         }
@@ -812,8 +796,6 @@
 
         document.addEventListener('touchend', e => {
             if (touchStartXPoint === 0 && touchStartYPoint === 0) return;
-            if (!document.getElementById('zoomModal').classList.contains('hidden')) return;
-            if (e.target.closest('.keypad-container')) return;
 
             const touchEndX = e.changedTouches[0].screenX;
             const touchEndY = e.changedTouches[0].screenY;
@@ -822,6 +804,10 @@
 
             touchStartXPoint = 0;
             touchStartYPoint = 0;
+
+            if (!document.getElementById('zoomModal').classList.contains('hidden')) return;
+            if (!document.getElementById('customConfirmModal').classList.contains('hidden')) return;
+            if (e.target.closest('.keypad-container')) return;
 
             /* 縦スクロール誤認防止：縦移動が小さい場合のみ横スワイプとしてタブ切り替えを実行 */
             if (Math.abs(diffY) < 60 && Math.abs(diffX) > 80) {
